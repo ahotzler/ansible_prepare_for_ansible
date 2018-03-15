@@ -1,0 +1,38 @@
+---
+- hosts: all
+  remote_user: root
+
+  tasks:
+
+  - name: Gruppe "ansible" anlegen
+    group:
+      name: ansible
+      gid: 20000
+      state: present
+
+  - name: Benutzer "ansible" anlegen
+    user:
+      name: ansible
+      createhome: yes
+      uid: 20000
+      group: ansible
+      state: present
+
+  - name: SSH-Key für Benutzer "ansible" kopieren
+    authorized_key:
+      user: ansible
+      key: "{{ lookup('file', './files/ansible_ssh_key.pub') }}"
+      key_options: 'no-port-forwarding'
+
+  - name: Installiere sudo
+    package:
+      name: sudo
+      state: present
+
+  - name: Sudoers-Eintrag für Benutzer "ansible" anlegen
+    copy:
+      dest: /etc/sudoers.d/ansible
+      content: 'ansible ALL= NOPASSWD: ALL'
+      owner: root
+      group: root
+      mode: 0500
